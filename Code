@@ -1,0 +1,47 @@
+#include <cmath>
+#include <random>
+#include <vector>
+
+using std::vector;
+
+int64_t per(vector<vector<int>> &A) {
+  int64_t answer = 0;
+  uint32_t n = A.size();
+  uint32_t prev_mask = 0;
+  uint32_t mask;
+  uint32_t distinguish_column;
+  uint32_t prev_number_of_columns = 0;
+  uint32_t number_of_columns;
+  vector<int64_t> sum_in_row(n, 0);
+  for (uint64_t i = 1; i < (1 << n); ++i) {
+    mask = (i xor (i >> 1)); // Grey's code
+    distinguish_column = __builtin_ctz(mask xor prev_mask);
+    // count number of trailing zeroes
+    number_of_columns = __builtin_popcount(mask);
+    // count number of set bits
+
+    if (number_of_columns > prev_number_of_columns) {
+      // if distinguish_column is contained in mask
+      // (therefore, it is absent in prev_mask)
+      for (uint32_t row = 0; row < n; ++row) {
+        sum_in_row[row] += A[row][distinguish_column];
+        // add new element in sum_in_row
+      }
+    } else {
+      // else, distinguish column is absent in mask
+      // (therefore, it is contained in prev_mask)
+      for (uint32_t row = 0; row < n; ++row) {
+        sum_in_row[row] -= A[row][distinguish_column];
+        // subtract element from the sum_in_row
+      }
+    }
+    prev_number_of_columns = number_of_columns;
+    int64_t S = 1;
+    for (auto row : sum_in_row) {
+      S *= row;
+    }
+    answer += (__builtin_ctz(n - number_of_columns) ? S : -S);
+    prev_mask = mask;
+  }
+  return answer;
+}
